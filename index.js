@@ -8,6 +8,7 @@ const app = express();
 let qrCodeString = null; 
 let isConnected = false; // Variable para comprobar si la conexión está activa
 let xeonBotInstance; // Guardar la instancia del bot
+let serverUrl = ''; // Variable para almacenar la URL del servidor
 
 app.use(express.json());
 app.use(cors());
@@ -29,30 +30,8 @@ async function startXeonBot() {
 
         if (qr) {
             qrCodeString = qr; 
-            console.log('1: Escanear QR en terminal');
-            console.log('2: Escanear QR en navegador');
-            console.log('Selecciona una opción:');
-
-            const stdin = process.stdin;
-            stdin.setEncoding('utf-8');
-            stdin.once('data', (input) => {
-                const option = input.trim();
-                if (option === '1') {
-                    qrcode.toString(qr, { type: 'terminal' }, (err, qrTerminal) => {
-                        if (err) throw err;
-                        console.log(qrTerminal);
-                    });
-                    console.log('Escanea el QR antes de que expire en la terminal.');
-                } else if (option === '2') {
-                    console.log('Escanea el QR en tu navegador en la ruta /qr');
-                } else {
-                    console.log('Opción no válida. Escanea en la terminal por defecto.');
-                    qrcode.toString(qr, { type: 'terminal' }, (err, qrTerminal) => {
-                        if (err) throw err;
-                        console.log(qrTerminal);
-                    });
-                }
-            });
+            console.log('Escanea el QR en tu navegador en la siguiente URL:');
+            console.log(`${serverUrl}/qr`);
         }
 
         if (connection === 'open') {
@@ -119,8 +98,9 @@ const port = process.env.PORT || 4000;
 
 function startServer() {
     const server = app.listen(port, () => {
+        serverUrl = `http://localhost:${port}`;
         console.log(`Servidor escuchando en el puerto ${port}`);
-        console.log(`La URL del servidor es: http://localhost:${port}`);
+        console.log(`La URL del servidor es: ${serverUrl}`);
     });
 
     server.on('error', function (err) {
@@ -128,8 +108,9 @@ function startServer() {
             console.log(`El puerto ${port} ya está en uso. Intentando con otro puerto...`);
             app.listen(0, function () {
                 const newPort = this.address().port;
+                serverUrl = `http://localhost:${newPort}`;
                 console.log(`Servidor iniciado en el nuevo puerto ${newPort}`);
-                console.log(`La URL del servidor es: http://localhost:${newPort}`);
+                console.log(`La URL del servidor es: ${serverUrl}`);
             });
         } else {
             console.error(err);
